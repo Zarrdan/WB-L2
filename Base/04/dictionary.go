@@ -35,13 +35,12 @@ func setAnagram(str []string) map[string][]string {
 
 	s := checkDubl(str)
 
-	tempMap := make(map[string][]string) // map[акптя:[пятак пятка тяпка] иклост:[листок слиток столик]]
+	tempMap := make(map[string][]string)
 	for _, val := range s {
 		tempMap[strSort(val)] = append(tempMap[strSort(val)], val)
 	}
 
-	// мапа множест анаграм, у которой ключ первое встретившейся в словаре слово из множества. Значение ссылка на массив, каждый элемент которого, слово из
-	//множества
+	// мапа множест анаграм, у которой ключ первое встретившейся в словаре слово из множества.
 	newMap := make(map[string][]string)
 	for _, v := range tempMap {
 		temp := v
@@ -50,14 +49,12 @@ func setAnagram(str []string) map[string][]string {
 	return newMap
 }
 
-// сортировка строк
 func strSort(s string) string {
 	r := []rune(s)
 	sort.Sort(sortRunes(r))
 	return string(r)
 }
 
-// реализация структуры и интерфейса для сортировки
 type sortRunes []rune
 
 func (s sortRunes) Less(i, j int) bool {

@@ -26,9 +26,8 @@ import (
 */
 
 func main() {
-	// парсим флаги
-	after := flag.Int("A", 0, "печатать N строк после совпадения")
-	before := flag.Int("B", 0, "печатать N строк до совпадения")
+	after := flag.Int("A", 0, "печатать +N строк после совпадения")
+	before := flag.Int("B", 0, "печатать +N строк до совпадения")
 	contextText := flag.Int("C", 0, "печатать ±N строк вокруг совпадения")
 	countBool := flag.Bool("c", false, "количество строк")
 	ignoreCase := flag.Bool("i", false, "игнорировать регистр")
@@ -37,33 +36,28 @@ func main() {
 	lineNum := flag.Bool("n", false, "печатать номер строки")
 	filePath := flag.String("fp", "", "указать абсолютный путь до файла")
 	flag.Parse()
-	// фраза которую ищем, последнее значение в os.Args
 	findPhrase := os.Args[len(os.Args)-1]
-	// считываем файлы, в котором будем искать
 	data, err := ioutil.ReadFile(*filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	//   создаем список строк
 	tempStr := strings.Split(string(data), "\n")
 	text := make([]string, 0, len(tempStr))
-	// Если игнорируем регистр, то приводим весь текст и фразу к нижнему регистру, и делим текст по строкам
 	if *ignoreCase {
 		str := strings.ToLower(string(data))
 		text = strings.Split(str, "\n")
 		findPhrase = strings.ToLower(findPhrase)
 	} else {
-		text = strings.Split(string(data), "\n") // Если не игнорируем, то просто делим текст по строкам
+		text = strings.Split(string(data), "\n")
 	}
-	// список индексов в который будем добавлять индексы точных совпадении
 	arr := []int{}
-	if *fixed { // если точное совпадение, сравниваем фразу и добавляем если совпадает
+	if *fixed {
 		for ind, val := range text {
 			if findPhrase == val {
 				arr = append(arr, ind)
 			}
 		}
-	} else { // В ином случае, во время итерации узнаем есть совпадение фразы со словом из строки. Добавляем индексы.
+	} else {
 		for ind, val := range text {
 			check, err := regexp.MatchString(findPhrase, val)
 			if err != nil {
@@ -74,7 +68,6 @@ func main() {
 			}
 		}
 	}
-
 	// Вывод строк до совпадения
 	if *before > 0 {
 		for _, v := range arr {
@@ -124,23 +117,18 @@ func main() {
 	}
 	// исключения
 	if *invert {
-		// если первый индекс не равен нулю, то выводим строки до первого элемента
 		if arr[0] != 0 {
 			fmt.Println(strings.Join(text[:arr[0]], "\n"))
 		}
 		for i, v := range arr {
-			// пропуск перого элемента
 			if arr[0] == v {
 				continue
 			}
-			// если разница между индексам 1, то тоже пропускаем
 			if arr[i-1]-arr[i] == 1 {
 				continue
 			}
-			// выводим строки между найденными
 			fmt.Println(strings.Join(text[arr[i-1]+1:arr[i]], "\n"))
 		}
-		// если последний элемент не равен, количеству всех строк
 		if arr[len(arr)-1] != len(text)-1 {
 			fmt.Println(strings.Join(text[arr[len(arr)-1]+1:], "\n"))
 		}

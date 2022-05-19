@@ -28,13 +28,11 @@ import (
 Программа должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
-// определяем  структуру флагов
 type flags struct {
 	k       int
 	n, r, u bool
 }
 
-// распределяем полученные флаги в структуру
 func newFlags(k *int, n, r, u *bool) flags {
 	return flags{
 		k: *k,
@@ -45,7 +43,6 @@ func newFlags(k *int, n, r, u *bool) flags {
 }
 
 func main() {
-	// Парсинг флагов
 	k := flag.Int("k", -1, "указание колонки для сортировки")
 	n := flag.Bool("n", false, "сортировать по числовому значению")
 	r := flag.Bool("r", false, "сортировать в обратном порядке")
@@ -59,17 +56,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// запускаем сортировку
 	flags.sort(content)
 
 }
 
-// сортировка файла
 func (f flags) sort(c []byte) {
-	// переводим нашу последовательность байт в строку и разделяем по строкам
 	str := strings.Split(string(c), "\n")
 
-	// Проверка будут ли дубликаты, если не нужны дубликаты, то получем множество строк
 	if f.u {
 		temp := map[string]struct{}{}
 		for _, r := range str {
@@ -80,12 +73,10 @@ func (f flags) sort(c []byte) {
 			str = append(str, k)
 		}
 	}
-	// получаем двухмерный массив, в котором строки делим еще на колонки, где разделитель будем пробел
 	dataArr := make([][]string, len(str))
 	for i := range str {
 		dataArr[i] = strings.Split(str[i], " ")
 	}
-	// если сортировка по колонкам то проверяем остальные флаги и вызываем функцию сортировки соотвествующую набору флагов
 	if f.k > -1 {
 		switch true {
 		case f.n && f.r:
@@ -99,7 +90,6 @@ func (f flags) sort(c []byte) {
 		}
 		fmt.Println(dataArr)
 	}
-	// если сортировка по длине строки, то проверяем остальные флаги и вызываем функцию сортировки соотвествующую набору флагов
 	if f.k == -1 {
 		switch true {
 		case f.n && f.r:
