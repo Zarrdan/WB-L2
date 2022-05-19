@@ -1,128 +1,9 @@
 package main
 
-import "fmt"
-
-//_______________________________________________________________________
-// Интерфейс стратегии
-
-type state interface {
-	AddItem(int) error
-	RequestItem() error
-	InsertMoney(money int) error
-	DispenseItem() error
-}
-
-//_______________________________________________________________________
-// Конкретная стратегия
-
-type noItemState struct {
-	vendingMachine *vendingMachine
-}
-
-func (i *noItemState) RequestItem() error {
-	return fmt.Errorf("item out of stock")
-}
-
-func (i *noItemState) AddItem(count int) error {
-	i.vendingMachine.incrementItemCount(count)
-	i.vendingMachine.setState(i.vendingMachine.hasItem)
-	return nil
-}
-
-func (i *noItemState) InsertMoney(money int) error {
-	return fmt.Errorf("item out of stock")
-}
-func (i *noItemState) DispenseItem() error {
-	return fmt.Errorf("item out of stock")
-}
-
-//_______________________________________________________________________
-// Конкретная стратегия
-
-type hasItemState struct {
-	vendingMachine *vendingMachine
-}
-
-func (i *hasItemState) RequestItem() error {
-	if i.vendingMachine.itemCount == 0 {
-		i.vendingMachine.setState(i.vendingMachine.noItem)
-		return fmt.Errorf("no item present")
-	}
-	fmt.Printf("Item requestd\n")
-	i.vendingMachine.setState(i.vendingMachine.itemRequested)
-	return nil
-}
-
-func (i *hasItemState) AddItem(count int) error {
-	fmt.Printf("%d items added\n", count)
-	i.vendingMachine.incrementItemCount(count)
-	return nil
-}
-
-func (i *hasItemState) InsertMoney(money int) error {
-	return fmt.Errorf("please select item first")
-}
-func (i *hasItemState) DispenseItem() error {
-	return fmt.Errorf("please select item first")
-}
-
-//_______________________________________________________________________
-// Конкретная стратегия
-type itemRequestedState struct {
-	vendingMachine *vendingMachine
-}
-
-func (i *itemRequestedState) RequestItem() error {
-	return fmt.Errorf("item already requested")
-}
-
-func (i *itemRequestedState) AddItem(count int) error {
-	return fmt.Errorf("item Dispense in progress")
-}
-
-func (i *itemRequestedState) InsertMoney(money int) error {
-	if money < i.vendingMachine.itemPrice {
-		return fmt.Errorf("inserted money is less. Please insert %d", i.vendingMachine.itemPrice)
-	}
-	fmt.Println("Money entered is ok")
-	i.vendingMachine.setState(i.vendingMachine.hasMoney)
-	return nil
-}
-func (i *itemRequestedState) DispenseItem() error {
-	return fmt.Errorf("please insert money first")
-}
-
-//_______________________________________________________________________
-// Конкретная стратегия
-
-type hasMoneyState struct {
-	vendingMachine *vendingMachine
-}
-
-func (i *hasMoneyState) RequestItem() error {
-	return fmt.Errorf("item dispense in progress")
-}
-
-func (i *hasMoneyState) AddItem(count int) error {
-	return fmt.Errorf("item dispense in progress")
-}
-
-func (i *hasMoneyState) InsertMoney(money int) error {
-	return fmt.Errorf("item out of stock")
-}
-func (i *hasMoneyState) DispenseItem() error {
-	fmt.Println("Dispensing Item")
-	i.vendingMachine.itemCount = i.vendingMachine.itemCount - 1
-	if i.vendingMachine.itemCount == 0 {
-		i.vendingMachine.setState(i.vendingMachine.noItem)
-	} else {
-		i.vendingMachine.setState(i.vendingMachine.hasItem)
-	}
-	return nil
-}
-
-//_______________________________________________________________________
-// Контекст
+import (
+	"fmt"
+	"log"
+)
 
 type vendingMachine struct {
 	hasItem       state
@@ -136,7 +17,7 @@ type vendingMachine struct {
 	itemPrice int
 }
 
-func NewVendingMachine(itemCount, itemPrice int) *vendingMachine {
+func newVendingMachine(itemCount, itemPrice int) *vendingMachine {
 	v := &vendingMachine{
 		itemCount: itemCount,
 		itemPrice: itemPrice,
@@ -162,20 +43,20 @@ func NewVendingMachine(itemCount, itemPrice int) *vendingMachine {
 	return v
 }
 
-func (v *vendingMachine) RequestItem() error {
-	return v.currentState.RequestItem()
+func (v *vendingMachine) requestItem() error {
+	return v.currentState.requestItem()
 }
 
-func (v *vendingMachine) AddItem(count int) error {
-	return v.currentState.AddItem(count)
+func (v *vendingMachine) addItem(count int) error {
+	return v.currentState.addItem(count)
 }
 
-func (v *vendingMachine) InsertMoney(money int) error {
-	return v.currentState.InsertMoney(money)
+func (v *vendingMachine) insertMoney(money int) error {
+	return v.currentState.insertMoney(money)
 }
 
-func (v *vendingMachine) DispenseItem() error {
-	return v.currentState.DispenseItem()
+func (v *vendingMachine) dispenseItem() error {
+	return v.currentState.dispenseItem()
 }
 
 func (v *vendingMachine) setState(s state) {
@@ -185,4 +66,152 @@ func (v *vendingMachine) setState(s state) {
 func (v *vendingMachine) incrementItemCount(count int) {
 	fmt.Printf("Adding %d items\n", count)
 	v.itemCount = v.itemCount + count
+}
+
+type state interface {
+	addItem(int) error
+	requestItem() error
+	insertMoney(money int) error
+	dispenseItem() error
+}
+
+type noItemState struct {
+	vendingMachine *vendingMachine
+}
+
+func (i *noItemState) requestItem() error {
+	return fmt.Errorf("Item out of stock")
+}
+
+func (i *noItemState) addItem(count int) error {
+	i.vendingMachine.incrementItemCount(count)
+	i.vendingMachine.setState(i.vendingMachine.hasItem)
+	return nil
+}
+
+func (i *noItemState) insertMoney(money int) error {
+	return fmt.Errorf("Item out of stock")
+}
+func (i *noItemState) dispenseItem() error {
+	return fmt.Errorf("Item out of stock")
+}
+
+type hasItemState struct {
+	vendingMachine *vendingMachine
+}
+
+func (i *hasItemState) requestItem() error {
+	if i.vendingMachine.itemCount == 0 {
+		i.vendingMachine.setState(i.vendingMachine.noItem)
+		return fmt.Errorf("No item present")
+	}
+	fmt.Printf("Item requestd\n")
+	i.vendingMachine.setState(i.vendingMachine.itemRequested)
+	return nil
+}
+
+func (i *hasItemState) addItem(count int) error {
+	fmt.Printf("%d items added\n", count)
+	i.vendingMachine.incrementItemCount(count)
+	return nil
+}
+
+func (i *hasItemState) insertMoney(money int) error {
+	return fmt.Errorf("Please select item first")
+}
+func (i *hasItemState) dispenseItem() error {
+	return fmt.Errorf("Please select item first")
+}
+
+type itemRequestedState struct {
+	vendingMachine *vendingMachine
+}
+
+func (i *itemRequestedState) requestItem() error {
+	return fmt.Errorf("Item already requested")
+}
+
+func (i *itemRequestedState) addItem(count int) error {
+	return fmt.Errorf("Item Dispense in progress")
+}
+
+func (i *itemRequestedState) insertMoney(money int) error {
+	if money < i.vendingMachine.itemPrice {
+		fmt.Errorf("Inserted money is less. Please insert %d", i.vendingMachine.itemPrice)
+	}
+	fmt.Println("Money entered is ok")
+	i.vendingMachine.setState(i.vendingMachine.hasMoney)
+	return nil
+}
+func (i *itemRequestedState) dispenseItem() error {
+	return fmt.Errorf("Please insert money first")
+}
+
+type hasMoneyState struct {
+	vendingMachine *vendingMachine
+}
+
+func (i *hasMoneyState) requestItem() error {
+	return fmt.Errorf("Item dispense in progress")
+}
+
+func (i *hasMoneyState) addItem(count int) error {
+	return fmt.Errorf("Item dispense in progress")
+}
+
+func (i *hasMoneyState) insertMoney(money int) error {
+	return fmt.Errorf("Item out of stock")
+}
+func (i *hasMoneyState) dispenseItem() error {
+	fmt.Println("Dispensing Item")
+	i.vendingMachine.itemCount = i.vendingMachine.itemCount - 1
+	if i.vendingMachine.itemCount == 0 {
+		i.vendingMachine.setState(i.vendingMachine.noItem)
+	} else {
+		i.vendingMachine.setState(i.vendingMachine.hasItem)
+	}
+	return nil
+}
+
+func main() {
+	vendingMachine := newVendingMachine(1, 10)
+
+	err := vendingMachine.requestItem()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	err = vendingMachine.insertMoney(10)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	err = vendingMachine.dispenseItem()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	fmt.Println()
+
+	err = vendingMachine.addItem(2)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	fmt.Println()
+
+	err = vendingMachine.requestItem()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	err = vendingMachine.insertMoney(10)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	err = vendingMachine.dispenseItem()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 }
